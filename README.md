@@ -11,6 +11,7 @@ In order to specify the place where the program looks for files, make a .txt fil
 * F/G/H: play, pause/unpause, stop, respectively
 * Q: turn on/off search mode
 * K: turn on/off queue mode
+* R: reload files list(for if you changed filepath.txt while the program is running)
 
 ### Search mode
 Search mode is exactly what it sounds like
