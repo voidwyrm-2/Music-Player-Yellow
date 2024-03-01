@@ -25,6 +25,8 @@ allowedexts = (
     '.ogg'
 )
 
+files = []
+
 
 
 '''parser = argparse.ArgumentParser()
@@ -36,30 +38,30 @@ args = parser.parse_args()
 
 musicpath = Path(str(args.path))'''
 
-if not Path('filepath.txt').exists():
-    print('filepath.txt not found, creating new...')
-    with open('filepath.txt', 'xt') as fp404: fp404.write('')
+def loadfiles():
+    files.clear()
+    if not Path('filepath.txt').exists():
+        print('filepath.txt not found, creating new...')
+        with open('filepath.txt', 'xt') as fp404: fp404.write('')
+
+    with open('filepath.txt', 'rt') as fp: musicpath = fp.read()
+    if musicpath in ('', ' ', None): print('musicpath is empty!'); raise SystemExit()
+    musicpath = Path(musicpath)
+
+    if not musicpath.exists(): print(f'path "{musicpath}" doesn\'t exist!'); raise SystemExit()
+
+    if not musicpath.is_dir(): print(f'path "{musicpath}" isn\'t a folder!'); raise SystemExit()
 
 
-with open('filepath.txt', 'rt') as fp: musicpath = fp.read()
-if musicpath in ('', ' ', None): print('musicpath is empty!'); raise SystemExit()
-musicpath = Path(musicpath)
+    for file in musicpath.iterdir():
+        if str(file).casefold().endswith(allowedexts) and file.is_file(): files.append(str(file))
+
+    if files in ([], [''], [' '], None): print(f'path "{musicpath}" doesn\'t contain any compatible files!'); raise SystemExit()
+    files.sort()
 
 
-if not musicpath.exists(): print(f'path "{musicpath}" doesn\'t exist!'); raise SystemExit()
 
-if not musicpath.is_dir(): print(f'path "{musicpath}" isn\'t a folder!'); raise SystemExit()
-
-
-files = []
-
-
-for file in musicpath.iterdir():
-    if str(file).casefold().endswith(allowedexts) and file.is_file(): files.append(str(file))
-
-
-if files in ([], [''], [' '], None): print(f'path "{musicpath}" doesn\'t contain any compatible files!'); raise SystemExit()
-files.sort()
+loadfiles()
 
 
 
@@ -101,7 +103,7 @@ gunhat = 0
 
 
 
-pathtofolder = str(files[0]).removesuffix("/" + str(files[0]).split("/")[-1]) + '/...'
+pathtofolder = str(files[0]).removesuffix('/' + str(files[0]).split('/')[-1]) + '/...'
 
 def showfiles():
     color = 255, 255, 255
@@ -190,6 +192,8 @@ while running:
                 if event.key == pygame.K_q: searchmode = True
 
                 if event.key == pygame.K_k: searchmode = True; queuemode = True
+
+                if event.key == pygame.K_r: loadfiles(); reload(); pathtofolder = str(files[0]).removesuffix('/' + str(files[0]).split('/')[-1]) + '/...'
 
             else:
                 if event.key == pygame.K_c and gunhat == 0: gunhat = 1
