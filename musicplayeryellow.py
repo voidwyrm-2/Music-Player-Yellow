@@ -93,6 +93,7 @@ currentsong = currentsongindex
 mixer.music.load(files[currentsongindex])
 
 searchmode = False
+queuemode = False
 searching = ''
 
 
@@ -151,7 +152,7 @@ def stop(): mixer.music.stop()
 def queue(filename): mixer.music.queue(filename)
 
 
-
+smtick = 0
 running = True
 while running:
     currentsongindex = limitminmax(currentsongindex, 0, len(files) - 1)
@@ -186,7 +187,9 @@ while running:
 
                 if event.key == pygame.K_h: stop()
 
-                if event.key == pygame.K_z: searchmode = True
+                if event.key == pygame.K_q: searchmode = True
+
+                if event.key == pygame.K_k: searchmode = True; queuemode = True
 
             else:
                 if event.key == pygame.K_c and gunhat == 0: gunhat = 1
@@ -197,12 +200,20 @@ while running:
                 if event.key == pygame.K_r and gunhat == 5: gunhat = 6
 
                 num = event.key - 48
-                if event.key == pygame.K_x: searching = ''; searchmode = False
-                elif event.key in (pygame.K_t, pygame.K_RETURN):
-                    currentsongindex = limitminmax(int(searching) - 1, 0, len(files) - 1); reload()
-                    currentsong = currentsongindex
-                    searching = ''
-                    searchmode = False
+                if event.key == pygame.K_q and smtick > 2: searching = ''; searchmode = False; queuemode = False
+                elif event.key == pygame.K_k and queuemode:  searching = ''; searchmode = False; queuemode = False
+                elif event.key == pygame.K_RETURN:
+                    if queuemode:
+                        quefile = files[limitminmax(int(searching) - 1, 0, len(files) - 1)]
+                        mixer.music.queue(quefile)
+                        searching = ''
+                        searchmode = False
+                        queuemode = False
+                    else:
+                        currentsongindex = limitminmax(int(searching) - 1, 0, len(files) - 1); reload()
+                        currentsong = currentsongindex
+                        searching = ''
+                        searchmode = False
                 elif event.key == pygame.K_BACKSPACE:
                     lser = list(searching)
                     del lser[-1]
@@ -211,6 +222,8 @@ while running:
                     if num >= 0 and num <= 9: searching += str(num)
 
     showfiles()
+
+    if searchmode: smtick += 1
 
     if gunhat >= 6:
         pygame.display.set_caption('Howdy, Gun-hat')
@@ -223,3 +236,10 @@ while running:
     
     pygame.display.update()
     #cyclenum += 1
+
+'''
+If you couldn't tell already
+This music player is semi-inspired(or something) by Undertale Yellow
+I downloaded the soundtrack and made this so I could easily listen to it
+
+'''
