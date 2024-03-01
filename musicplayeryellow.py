@@ -5,6 +5,10 @@ import argparse
 
 
 
+def limitmin(input, min):
+    if input < min: return min
+    else: return input
+
 def limitminmax(input, min, max):
     if input < min: return min
     elif input > max: return max
@@ -114,13 +118,14 @@ def showfiles():
     x = xstart
     ystart = 20
     y = ystart
-    songnum = 1
-    for f in files:
-        sname = str(f).split('/')[-1].split('.')[0]
-        songname = mainfont.render(f'{songnum}: {sname}', True, color)
+    songnum = 0
+    while songnum < len(files):
+        sname = str(files[songnum]).split('/')[-1].split('.')[0]
+        songname = mainfont.render(f'{songnum + 1}: {sname}', True, color)
         screen.blit(songname, (x, y))
         y += 16
         if y >= screenxy[1] - 30: x += 290; y = ystart
+        if x >= screenxy[0]: return
         songnum += 1
 
 
@@ -132,6 +137,21 @@ def showselected(x, y):
 def showsearching(x, y):
     searched = searchfont.render(searching, True, (255, 255, 0))
     screen.blit(searched, (x, y))
+
+def showsearchmode(x, y):
+    searched = searchfont.render('search mode', True, (240, 240, 0))
+    screen.blit(searched, (x, y))
+
+def showqueuemode(x, y):
+    searched = searchfont.render('queue mode', True, (240, 240, 0))
+    screen.blit(searched, (x, y))
+
+
+def showsongtime(x, y):
+    seconds = int(mixer.music.get_pos() / 1000)
+    minutes = limitmin(int((mixer.music.get_pos() / 1000) // 60), 0)
+    songname = mainfont.render(f'current song time: {minutes}:{seconds}', True, (255, 255, 255))
+    screen.blit(songname, (x, y))
 
 
 def reload():
@@ -153,7 +173,9 @@ def stop(): mixer.music.stop()
 
 def queue(filename): mixer.music.queue(filename)
 
-
+sqmtick = 0
+smshow = False
+sqshow = False
 smtick = 0
 running = True
 while running:
@@ -233,13 +255,35 @@ while running:
         pygame.display.set_caption('Howdy, Gun-hat')
         pygame.display.set_icon(pygame.image.load('Clover.png'))
 
-    if searchmode: showsearching(screenxy[0] // 4, (screenxy[1] // 2))
-    else: showselected(0, screenxy[1] - 20)
+    if searchmode:
+        showsearching(screenxy[0] // 4, screenxy[1] // 2)
+        if queuemode:
+            if sqmtick >= 70:
+                if sqshow: sqshow = False
+                else: sqshow = True
+                sqmtick = 0
+        else:
+            if sqmtick >= 70:
+                if smshow: smshow = False
+                else: smshow = True
+                sqmtick = 0
+        sqmtick += 1
+    else:
+        sqmtick = 0
+        sqshow = False
+        smshow = False
+        showselected(0, screenxy[1] - 20)
+        showsongtime(200, screenxy[1] - 20)
+    
+    
+    if sqshow: showqueuemode(screenxy[0] // 4, screenxy[1] // 1.5)
+    if smshow: showsearchmode(screenxy[0] // 2 - 150, screenxy[1] // 1.5)
 
     clock.tick(60)
     
     pygame.display.update()
     #cyclenum += 1
+    #print(sqmtick)
 
 '''
 If you couldn't tell already
