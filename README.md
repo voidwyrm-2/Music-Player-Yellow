@@ -31,4 +31,21 @@ You can only queue up one song at a time, however
 # DISCLAIMER
 I have no relation whatsoever to the Undertale Yellow team, I just really like the game's music and felt the need to make this music player
 
-The Undertale Yellow team is the owner of Clover and I simply just traced the character for this
+The Undertale Yellow team is the owner of Clover and Undertale Yellow and I simply just traced the character(Clover) for this
+
+
+
+# LICENSE
+Copyright 2024 Nuclear Pasta
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
