@@ -241,9 +241,10 @@ while running:
                         searching = ''
                         searchmode = False
                 elif event.key == pygame.K_BACKSPACE:
-                    lser = list(searching)
-                    del lser[-1]
-                    searching = stringify(lser)
+                    if searching not in ('', ' ', None):
+                        lser = list(searching)
+                        del lser[-1]
+                        searching = stringify(lser)
                 else:
                     if num >= 0 and num <= 9: searching += str(num)
 
