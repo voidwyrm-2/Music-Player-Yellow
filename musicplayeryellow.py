@@ -15,6 +15,12 @@ def limitminmax(input, min, max):
     else: return input
 
 
+def jumplimit(input, min, max):
+    if input < min: return min
+    elif input > max: return input - max
+    else: return input
+
+
 def stringify(list):
     out = ''
     for i in list: out += str(i)
@@ -30,6 +36,7 @@ allowedexts = (
 )
 
 files = []
+filequeue = []
 
 
 
@@ -91,6 +98,9 @@ clock = pygame.time.Clock()
 
 
 
+songplayed = False
+
+
 cyclenum = 0
 
 
@@ -101,6 +111,8 @@ mixer.music.load(files[currentsongindex])
 searchmode = False
 queuemode = False
 searching = ''
+
+canqueue = True
 
 
 gunhat = 0
@@ -133,6 +145,16 @@ def showselected(x, y):
     songname = mainfont.render('currently selected: ' + str(currentsongindex + 1), True, (255, 255, 255))
     screen.blit(songname, (x, y))
 
+def showsongtime(x, y):
+    seconds = int(mixer.music.get_pos() / 1000)
+    minutes = limitmin(int((mixer.music.get_pos() / 1000) // 60), 0)
+    songname = mainfont.render(f'current song time: {minutes}:{seconds}', True, (255, 255, 255))
+    screen.blit(songname, (x, y))
+
+def showqueued(x, y):
+    songname = mainfont.render('currently queued: ' + str(len(filequeue)), True, (255, 255, 255))
+    screen.blit(songname, (x, y))
+
 
 def showsearching(x, y):
     searched = searchfont.render(searching, True, (255, 255, 0))
@@ -145,13 +167,6 @@ def showsearchmode(x, y):
 def showqueuemode(x, y):
     searched = searchfont.render('queue mode', True, (240, 240, 0))
     screen.blit(searched, (x, y))
-
-
-def showsongtime(x, y):
-    seconds = int(mixer.music.get_pos() / 1000)
-    minutes = limitmin(int((mixer.music.get_pos() / 1000) // 60), 0)
-    songname = mainfont.render(f'current song time: {minutes}:{seconds}', True, (255, 255, 255))
-    screen.blit(songname, (x, y))
 
 
 def reload():
@@ -172,6 +187,14 @@ def stop(): mixer.music.stop()
 
 
 def queue(filename): mixer.music.queue(filename)
+
+def nextinqueue():
+    nextfile = filequeue[0]
+    filequeue.pop(0)
+    mixer.music.unload()
+    mixer.music.load(nextfile)
+    play()
+
 
 sqmtick = 0
 smshow = False
@@ -204,6 +227,7 @@ while running:
                     reload()
 
                 if event.key == pygame.K_f:
+                    songplayed = True
                     currentsongindex = limitminmax(currentsongindex, 0, len(files) - 1)
                     play()
 
@@ -216,6 +240,11 @@ while running:
                 if event.key == pygame.K_k: searchmode = True; queuemode = True
 
                 if event.key == pygame.K_r: loadfiles(); reload(); pathtofolder = str(files[0]).removesuffix('/' + str(files[0]).split('/')[-1]) + '/...'
+
+                if event.key == pygame.K_o and not canqueue: canqueue = True
+                if event.key == pygame.K_p and canqueue: canqueue = False
+
+                if event.key == pygame.K_n and filequeue != []: nextinqueue()
 
             else:
                 if event.key == pygame.K_c and gunhat == 0: gunhat = 1
@@ -231,7 +260,7 @@ while running:
                 elif event.key == pygame.K_RETURN:
                     if queuemode:
                         quefile = files[limitminmax(int(searching) - 1, 0, len(files) - 1)]
-                        mixer.music.queue(quefile)
+                        filequeue.append(quefile)
                         searching = ''
                         searchmode = False
                         queuemode = False
@@ -249,6 +278,9 @@ while running:
                     if num >= 0 and num <= 9: searching += str(num)
 
     showfiles()
+
+    if filequeue != [] and not mixer.music.get_busy() and songplayed and mixer.music.get_pos() in (-1, 0) and canqueue: nextinqueue()
+
 
     if searchmode: smtick += 1
 
@@ -275,6 +307,7 @@ while running:
         smshow = False
         showselected(0, screenxy[1] - 20)
         showsongtime(200, screenxy[1] - 20)
+        if len(filequeue) > 0: showqueued(400, screenxy[1] - 20)
     
     
     if sqshow: showqueuemode(screenxy[0] // 4, screenxy[1] // 1.5)

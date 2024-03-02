@@ -2,38 +2,40 @@
 A music player made with pygame that's actually pretty good
 
 
-In order to specify the place where the program looks for files, make a .txt file in the same place as musicplayeryellow.py and put the path to the folder in there
+In order to specify the place where the program looks for files, make a file named "filepath.txt" in the same place as musicplayeryellow.py and put the path to the folder in there
+
 
 
 ## Controls
 * escape: exit the program
+
 * W/arrow up and S/arrow down: switch selected file
 * F/G/H: play, pause/unpause, stop, respectively
+* O/P: turn on/off playing next in queue automatically
+* N: skip current song and play next in queue(on by default)
 * Q: turn on/off search mode
 * K: turn on/off queue mode
 * R: reload files list(for if you changed filepath.txt while the program is running)
 
-### Search mode
-Search mode is exactly what it sounds like
 
+
+### Search mode
+Search mode is exactly what it sounds like<br>
 Type in the file number, and hit enter
 
 ### Queue mode
-Queue mode is search mode, but instead of changing the current song, you can queue up another
+Queue mode is search mode, but instead of changing the current song, it's added to a queue
 
-You can only queue up one song at a time, however
+(some say typing a certain *revolver-wielding character's* name in search mode might do something special)
 
-
-(if you get the reference of the name and icon, then some say typing a certain *revolver-wielding character's* name in search mode might do something special)
-
-
+<br>
 
 # DISCLAIMER
-I have no relation whatsoever to the Undertale Yellow team, I just really like the game's music and felt the need to make this music player
+I have **no relation whatsoever** to the Undertale Yellow team, I just really like the game's music and felt the need to make this music player
 
 The Undertale Yellow team is the owner of Clover and Undertale Yellow and I simply just traced the character(Clover) for this
 
-
+<br>
 
 # LICENSE
 Copyright 2024 Nuclear Pasta
