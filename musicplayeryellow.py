@@ -2,6 +2,7 @@ import pygame
 from pygame import mixer
 from pathlib import Path
 import argparse
+import time
 
 
 
@@ -39,6 +40,33 @@ files = []
 filequeue = []
 
 
+class Logger:
+    def __init__(self):
+        self.starttime = time.asctime()
+        self.loglist = []
+    
+    def log(self, content):
+        print(content)
+        self.loglist.append(content)
+    
+    def throw(self, exception):
+        if exception is not None and exception != '':
+            self.loglist.append(exception)
+        print('got exception!:\n' + exception)
+        with open(f'../exceptionlog({time.asctime()}).txt', 'xt') as excelog:
+            excelog.write(self.getlog())
+        raise SystemExit()
+
+    def showlog(self):
+        mplogger.log(self.getlog())
+    
+    def getlog(self):
+        out = f'session started at: {self.starttime}\n====LOG===='
+        for l in range(len(self.loglist)):
+            out += f'({l + 1}): {self.loglist[l]}\n'
+        return out.removesuffix('\n')
+
+
 
 '''parser = argparse.ArgumentParser()
 
@@ -49,25 +77,44 @@ args = parser.parse_args()
 
 musicpath = Path(str(args.path))'''
 
+
+mplogger = Logger()
+
+
+
+path_file = './musicpath.txt'
+
 def loadfiles():
+    global path_file
     files.clear()
-    if not Path('filepath.txt').exists():
-        print('filepath.txt not found, creating new...')
-        with open('filepath.txt', 'xt') as fp404: fp404.write('')
+    if not Path(path_file).exists():
+        path_file = '../' + path_file
+        if not Path(path_file).exists():
+            mplogger.log('musicpath.txt not found, creating new...')
+            with open(path_file, 'xt') as fp404: fp404.write('')
 
-    with open('filepath.txt', 'rt') as fp: musicpath = fp.read()
-    if musicpath in ('', ' ', None): print('musicpath is empty!'); raise SystemExit()
-    musicpath = Path(musicpath)
+    with open(path_file, 'rt') as fp: musicpath = fp.read()
 
-    if not musicpath.exists(): print(f'path "{musicpath}" doesn\'t exist!'); raise SystemExit()
+    if len(musicpath.strip()) < 1:
+        mplogger.log('musicpath is empty!'); raise SystemExit()
+    
+    musicpath = Path(musicpath.split('\n')[0])#.replace('\\ ', ' ').replace(' ', '\\ '))
 
-    if not musicpath.is_dir(): print(f'path "{musicpath}" isn\'t a folder!'); raise SystemExit()
+    if not musicpath.exists():
+        musicpath = Path('../', musicpath)
+        if not musicpath.exists():
+            mplogger.log(f'path "{musicpath}" doesn\'t exist!'); raise SystemExit()
 
+    if not musicpath.is_dir():
+        mplogger.log(f'path "{musicpath}" isn\'t a folder!'); raise SystemExit()
+
+    if len(list(musicpath.iterdir())) < 1:
+        mplogger.log(f'path "{musicpath}" doesn\'t contain any files!'); raise SystemExit()
 
     for file in musicpath.iterdir():
         if str(file).casefold().endswith(allowedexts) and file.is_file(): files.append(str(file))
 
-    if files in ([], [''], [' '], None): print(f'path "{musicpath}" doesn\'t contain any compatible files!'); raise SystemExit()
+    if len(files) < 1: mplogger.log(f'path "{musicpath}" doesn\'t contain any compatible files!'); raise SystemExit()
     files.sort()
 
 
@@ -148,6 +195,7 @@ def showselected(x, y):
 def showsongtime(x, y):
     seconds = int(mixer.music.get_pos() / 1000)
     minutes = limitmin(int((mixer.music.get_pos() / 1000) // 60), 0)
+    seconds -= 60 * minutes
     songname = mainfont.render(f'current song time: {minutes}:{seconds}', True, (255, 255, 255))
     screen.blit(songname, (x, y))
 
@@ -203,7 +251,7 @@ smtick = 0
 running = True
 while running:
     currentsongindex = limitminmax(currentsongindex, 0, len(files) - 1)
-    #print('current cycle number: ' + str(cyclenum))
+    #mplogger.log('current cycle number: ' + str(cyclenum))
     screen.fill((0, 0, 0))
 
     for event in pygame.event.get():
@@ -211,7 +259,7 @@ while running:
         if event.type == pygame.QUIT: running = False; break
 
         if event.type == pygame.KEYDOWN:
-            #print(f'pressed "{event.key}"!')
+            #mplogger.log(f'pressed "{event.key}"!')
             if event.key == pygame.K_ESCAPE: running = False; break
 
 
@@ -317,7 +365,7 @@ while running:
     
     pygame.display.update()
     #cyclenum += 1
-    #print(sqmtick)
+    #mplogger.log(sqmtick)
 
 '''
 If you couldn't tell already
