@@ -1,8 +1,9 @@
 import pygame
 from pygame import mixer
 from pathlib import Path
-import argparse
+#import argparse
 import time
+import os
 
 
 
@@ -114,6 +115,11 @@ musicpath = Path(str(args.path))'''
 mplogger = Logger()
 
 
+if not Path('./playlists').exists():
+    mplogger.log('playlists folder not found, creating new')
+    os.mkdir('./playlists')
+    mplogger.log('new playlists folder created')
+
 
 path_file = './musicpath.txt'
 
@@ -121,10 +127,11 @@ def loadfiles():
     global path_file
     files.clear()
     if not Path(path_file).exists():
-        path_file = '../' + path_file
         if not Path(path_file).exists():
             mplogger.log('musicpath.txt not found, creating new...')
             with open(path_file, 'xt') as fp404: fp404.write('')
+            mplogger.log('musicpath.txt created, please put the path to the music you want to load in it')
+            raise SystemExit()
 
     with open(path_file, 'rt') as fp: musicpath = fp.read()
 
@@ -134,7 +141,6 @@ def loadfiles():
     musicpath = Path(musicpath.split('\n')[0])#.replace('\\ ', ' ').replace(' ', '\\ '))
 
     if not musicpath.exists():
-        musicpath = Path('../', musicpath)
         if not musicpath.exists():
             mplogger.log(f'path "{musicpath}" doesn\'t exist!'); raise SystemExit()
 

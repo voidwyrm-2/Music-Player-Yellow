@@ -155,4 +155,4 @@ cython_debug/
 .DS_store
 filepath.txt
 musicpath.txt
-playlists/*.mpyp
+playlists/
