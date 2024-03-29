@@ -11,8 +11,10 @@ In order to specify the place where the program looks for files, make a file nam
 
 * W/arrow up and S/arrow down: switch selected file
 * F/G/H: play, pause/unpause, stop, respectively
-* O/P: turn on/off playing next in queue automatically
+* I/O: turn on/off playing next in queue automatically
 * N: skip current song and play next in queue(on by default)
+* P: make a new playlist out of the currently queued songs(not including the one playing)
+* L: load a playlist replace the currently playing song and current queue with it
 * Q: turn on/off search mode
 * K: turn on/off queue mode
 * R: reload files list(for if you changed filepath.txt while the program is running)

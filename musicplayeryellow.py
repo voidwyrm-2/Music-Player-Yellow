@@ -22,11 +22,44 @@ def jumplimit(input, min, max):
     else: return input
 
 
-def stringify(list):
-    out = ''
-    for i in list: out += str(i)
-    return out
+def notemptyinput(message: str, minimumrequiredlength: int = 1):
+    while True:
+        inp = input(message + '\n> ').strip()
+        if len(inp) < minimumrequiredlength: continue
+        return inp
 
+
+def confirm(message: str, confirms: list[str] = ['y', 'yes'], cancels: list[str] = ['n', 'no'], cursor: str = ''):
+    if len(confirms) < 1 or len(cancels) < 1: return False
+    print(message + f'({confirms[0]}/{cancels[0]})')
+    confirming = True
+    while confirming:
+        reply = input(cursor)
+        if reply in confirms: return True
+        elif reply in cancels: return False
+    return False
+
+
+def choosefromlist(choosefrom: list, default: str = '', message: str = None, cursor: str = ''):
+    choosefrom = list(choosefrom)
+    if message == None: message = 'Please type a number or the option to select one'
+    print(message)
+    for i in range(len(choosefrom)):
+        c = choosefrom[i]
+        print(str(i + 1) + ': ' + c)
+    choosing = True
+    while choosing:
+        reply = input(cursor)
+        if reply.isdigit():
+            if int(reply) - 1 in list(range(len(choosefrom))):
+                return choosefrom[int(reply) - 1]
+            else: print('not an option')
+        else:
+            try:
+                chosen = choosefrom.index(reply)
+                return chosen
+            except ValueError: print('not an option')
+    return default
 
 
 
@@ -234,14 +267,121 @@ def pause():
 def stop(): mixer.music.stop()
 
 
-def queue(filename): mixer.music.queue(filename)
+#def queue(filename): mixer.music.queue(filename)
 
 def nextinqueue():
-    nextfile = filequeue[0]
+    global currentsongindex
+    nextfile = filequeue[0][1]
+    currentsongindex = filequeue[0][0]
     filequeue.pop(0)
     mixer.music.unload()
     mixer.music.load(nextfile)
     play()
+    #print(filequeue)
+
+
+def createplaylist():
+    name = notemptyinput('what\'s the name of the playlist?')
+    filename = '_'.join(name.casefold().split(' '))
+    filepath = Path('playlists', filename + '.mpyp')
+    if filepath.exists():
+        reply = confirm('that playlist already exists, would you like to replace it?')
+        if not reply: return
+    songpath = str(files[0]).rsplit('/', 1)[0]
+    psongs = []
+    print('recording queued songs...')
+    #lens = []
+    for fq in filequeue: psongs.append(str(fq[0] + 1))#; rm = 'recorded "' + str(fq[1]).rsplit('/', 1)[-1] + '"'; print(rm, end = ''); lens.append(len(rm))
+    #m = 'all queued songs recorded'
+    #print(m + ' ' * (max(lens) - len(m)))
+    print('all queued songs recorded')
+    with open(filepath, 'xt') as pl:
+        print('writing...')
+        pl.write(f'id: {filename}\nname: {name}\npath: {songpath}\nsongs: {", ".join(psongs)}')
+        print('writing complete')
+
+
+def mpyp_invalid(reason: str = ''): print('playlist file is invalid!' + reason)
+def loadplaylist():
+    global filequeue
+    if len(filequeue) > 1:
+        reply = confirm('this will wipe your current queue and currently playing, are you sure you want to continue?')
+        if not reply: return
+    playlists = []
+    for p in Path('playlists').iterdir():
+        if p.is_file() and not str(p).casefold().endswith('.ds_store'):
+            fname = str(p).rsplit('/', 1)[-1]
+            with open(p, 'rt') as pf:
+                fc = pf.read().split('\n')
+                if len(fc) != 4:
+                    mpyp_invalid('(not enough lines)')
+                    continue
+                if not (fc[0].startswith('id: ') or fc[1].startswith('name: '), fc[2].startswith('path: '), fc[3].startswith('songs: ')):
+                    mpyp_invalid('(missing data field)')
+                    continue
+                filename, name, path, songs = fc
+                filename = filename.removeprefix('id: '); name = name.removeprefix('name: ');
+                path = path.removeprefix('path: '); songs = songs.removeprefix('songs: ').split(', ')
+
+                if filename != fname.removesuffix('.mpyp'):
+                    mpyp_invalid('(id not valid)')
+                    continue
+                elif path != str(files[0]).rsplit('/', 1)[0]:
+                    mpyp_invalid('(playlist path and current path are not the same)')
+                    continue
+                
+                songsactual = []
+                for s in songs:
+                    if not s.isdigit():
+                        mpyp_invalid(f'(song number "{s}" not valid)')
+                        continue
+                    songsactual.append(int(s) - 1)
+                
+                if len(filequeue) - 1 > max(songsactual):
+                    mpyp_invalid(f'(song number "{max(songsactual)}" exceeds the amount of songs currently loaded)')
+                    continue
+
+                playlists.append({
+                    'id': filename,
+                    'name': name,
+                    'path': path,
+                    'songs': songsactual
+                })
+    
+    if len(playlists) < 1:
+        print('no valid playlists found')
+        return
+    
+    playlistnames = [p['name'] for p in playlists]
+    chosen = -1
+    print('Please type a number or the option to select one')
+    for i in range(len(playlistnames)):
+        c = playlistnames[i]
+        print(str(i + 1) + ': ' + c)
+    choosing = True
+    while choosing:
+        reply = input('> ')
+        if reply.isdigit():
+            if int(reply) - 1 in list(range(len(playlistnames))):
+                chosen = int(reply) - 1
+            else: print('not an option'); continue
+        else:
+            try:
+                chosen = playlistnames.index(reply)
+            except ValueError: print('not an option'); continue
+        break
+    
+    if chosen < 0:
+        print('chosen was less than 1, ignoring')
+        return
+    
+    cp = playlists[chosen]
+
+    out = [(i, files[i]) for i in cp['songs']]
+
+    filequeue = out
+    nextinqueue()
+
 
 
 sqmtick = 0
@@ -279,20 +419,36 @@ while running:
                     currentsongindex = limitminmax(currentsongindex, 0, len(files) - 1)
                     play()
 
-                if event.key == pygame.K_g: pause()
+                if event.key == pygame.K_g:
+                    pause()
 
-                if event.key == pygame.K_h: stop()
+                if event.key == pygame.K_h:
+                    stop()
 
-                if event.key == pygame.K_q: searchmode = True
+                if event.key == pygame.K_q:
+                    searchmode = True
 
-                if event.key == pygame.K_k: searchmode = True; queuemode = True
+                if event.key == pygame.K_k:
+                    searchmode = True; queuemode = True
 
-                if event.key == pygame.K_r: loadfiles(); reload(); pathtofolder = str(files[0]).removesuffix('/' + str(files[0]).split('/')[-1]) + '/...'
+                if event.key == pygame.K_r:
+                    loadfiles()
+                    reload()
+                    pathtofolder = str(files[0]).removesuffix('/' + str(files[0]).split('/')[-1]) + '/...'
 
-                if event.key == pygame.K_o and not canqueue: canqueue = True
-                if event.key == pygame.K_p and canqueue: canqueue = False
+                if event.key == pygame.K_i and not canqueue:
+                    canqueue = True
+                if event.key == pygame.K_o and canqueue:
+                    canqueue = False
 
-                if event.key == pygame.K_n and filequeue != []: nextinqueue()
+                if event.key == pygame.K_p and len(filequeue) > 0:
+                    createplaylist()
+                
+                if event.key == pygame.K_l:
+                    loadplaylist()
+
+                if event.key == pygame.K_n and len(filequeue) > 0:
+                    nextinqueue()
 
             else:
                 if event.key == pygame.K_c and gunhat == 0: gunhat = 1
@@ -303,12 +459,19 @@ while running:
                 if event.key == pygame.K_r and gunhat == 5: gunhat = 6
 
                 num = event.key - 48
-                if event.key == pygame.K_q and smtick > 2: searching = ''; searchmode = False; queuemode = False
-                elif event.key == pygame.K_k and queuemode:  searching = ''; searchmode = False; queuemode = False
+                if event.key == pygame.K_q and smtick > 2:
+                    searching = ''
+                    searchmode = False
+                    queuemode = False
+                elif event.key == pygame.K_k and queuemode: 
+                    searching = ''
+                    searchmode = False
+                    queuemode = False
                 elif event.key == pygame.K_RETURN:
                     if queuemode:
-                        quefile = files[limitminmax(int(searching) - 1, 0, len(files) - 1)]
-                        filequeue.append(quefile)
+                        si = limitminmax(int(searching) - 1, 0, len(files) - 1)
+                        quefile = files[si]
+                        filequeue.append((si, quefile))
                         searching = ''
                         searchmode = False
                         queuemode = False
@@ -318,10 +481,10 @@ while running:
                         searching = ''
                         searchmode = False
                 elif event.key == pygame.K_BACKSPACE:
-                    if searching not in ('', ' ', None):
+                    if len(searching.strip()) > 0:
                         lser = list(searching)
                         del lser[-1]
-                        searching = stringify(lser)
+                        searching = ''.join(lser)
                 else:
                     if num >= 0 and num <= 9: searching += str(num)
 
